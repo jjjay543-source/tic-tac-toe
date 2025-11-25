@@ -1,187 +1,256 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>井字遊戲 - 智能 AI + 動畫 + 聲音</title>
-  <style>
-    :root{
-      --cell-size: 12vmin; /* responsive base */
-      --gap: 1.2vmin;
-      --bg1:#0f172a; --bg2:#0b1220;
-      --accent: #4f46e5;
-    }
-    html,body{height:100%;margin:0}
-    body{
-      font-family: Inter, Arial, "Noto Sans TC", sans-serif;
-      min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
-      color:#fff;background:linear-gradient(120deg,var(--bg1),var(--bg2));overflow-y:auto;
-    }
-
-    /* animated background using uploaded image (local path provided) */
-    .bg-hero{
-      position:fixed;inset:0;z-index:-2;background-size:cover;background-position:center;opacity:0.08;
-      background-image: url('/mnt/data/22e0d0b3-ffa3-4d1c-ae4c-09f90237bbf0.png');
-      filter: hue-rotate(200deg) blur(2px);
-      animation: bgPan 30s linear infinite;
-    }
-    @keyframes bgPan{0%{transform:scale(1) translateX(0)}50%{transform:scale(1.05) translateX(-3%)}100%{transform:scale(1) translateX(0)}}
-
-    header{padding:28px 16px 6px;text-align:center}
-    h1{margin:0;font-size:clamp(18px,3.6vmin,34px);letter-spacing:0.4px}
-    .meta{margin-top:8px;color:rgba(255,255,255,0.7);font-size:0.9rem}
-
-    main{width:100%;max-width:920px;padding:18px;box-sizing:border-box;display:flex;gap:24px;align-items:flex-start;justify-content:center}
-
-    /* board area */
-    .game-wrap{background:linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01));padding:18px;border-radius:14px;box-shadow:0 8px 30px rgba(2,6,23,0.6);backdrop-filter: blur(6px);}
-
-    #board{display:grid;grid-template-columns:repeat(3, var(--cell-size));gap:var(--gap);}
-    .cell{width:var(--cell-size);height:var(--cell-size);display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#0f172a33,#ffffff05);border-radius:10px;font-size:calc(var(--cell-size)*0.55);cursor:pointer;user-select:none;transition:transform .18s ease, box-shadow .18s ease, background .18s ease;box-shadow:0 6px 18px rgba(2,6,23,0.5);}
-    .cell:hover{transform:translateY(-6px) scale(1.02);box-shadow:0 18px 30px rgba(2,6,23,0.6)}
-    .cell.win{background:linear-gradient(90deg,#ffecb3,#ffd54f);color:#111;transform:scale(1.06) !important}
-
-    /* control panel */
-    .panel{display:flex;flex-direction:column;gap:12px;padding:12px;min-width:220px}
-    .panel .status{font-size:1.05rem}
-    .btn{padding:10px 14px;border-radius:10px;border:0;cursor:pointer;font-weight:600}
-    .btn.primary{background:var(--accent);color:#fff}
-    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.08);color:#fff}
-
-    .stats{display:flex;gap:8px;flex-wrap:wrap}
-    .stat{padding:8px 12px;background:rgba(255,255,255,0.03);border-radius:10px}
-
-    footer{color:rgba(255,255,255,0.6);font-size:12px;padding:22px}
-
-    /* responsive */
-    @media (max-width:600px){
-      :root{--cell-size:20vmin}
-      main{flex-direction:column;align-items:center}
-      .panel{width:100%;align-items:center}
-    }
-
-    /* simple appear animation */
-    .fade-in{animation:fadeIn .45s ease both}
-    @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>數獨 - 進階版</title>
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--text:#111;--accent:#4f46e5;--muted:#666}
+[data-theme="dark"]{--bg:#0b1220;--card:#071029;--text:#eef6ff;--accent:#9aa6ff;--muted:#9fb0d6}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter, 'Noto Sans TC', Arial, sans-serif;background:linear-gradient(120deg,var(--bg),#e9eefb);min-height:100vh;color:var(--text)}
+.bg-hero{position:fixed;inset:0;z-index:-2;background-image:url('/mnt/data/22e0d0b3-ffa3-4d1c-ae4c-09f90237bbf0.png');background-size:cover;background-position:center;opacity:0.06;filter:blur(3px) hue-rotate(180deg)}
+.container{max-width:1100px;margin:24px auto;padding:18px}
+.header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.h-title{margin:0}
+.controls{display:flex;gap:8px;align-items:center}
+select,input[type=range],button{padding:8px;border-radius:8px;border:1px solid rgba(0,0,0,0.08);background:var(--card);color:var(--text)}
+button.btn{cursor:pointer}
+.grid-wrap{display:flex;gap:18px;margin-top:18px}
+.sudoku-card{background:var(--card);padding:14px;border-radius:12px;box-shadow:0 8px 24px rgba(2,6,23,0.06);}
+#board{display:grid;grid-template-columns:repeat(9,1fr);width:min(540px,90vmin);gap:4px}
+.cell{aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;font-size:1.15rem;border-radius:6px;background:linear-gradient(180deg,rgba(255,255,255,0.6),rgba(0,0,0,0.01));cursor:text}
+.cell input{width:100%;height:100%;border:0;background:transparent;text-align:center;font-size:1.15rem;outline:none}
+.cell.fixed{background:linear-gradient(180deg,rgba(0,0,0,0.02),rgba(255,255,255,0.03));font-weight:700}
+.cell.error{background:#ffb3b3;color:#520000}
+.cell.highlight{background:linear-gradient(90deg,#fef3c7,#fff7cc)}
+.cell.same{box-shadow:inset 0 0 0 3px rgba(79,70,229,0.08)}
+.block-border{border:2px solid rgba(0,0,0,0.06);}
+.panel{width:320px;display:flex;flex-direction:column;gap:10px}
+.stat{display:flex;justify-content:space-between;padding:8px 10px;background:rgba(0,0,0,0.02);border-radius:8px}
+.small{font-size:0.85rem;color:var(--muted)}
+footer{margin-top:18px;color:var(--muted);font-size:0.85rem}
+@media(max-width:900px){.grid-wrap{flex-direction:column;align-items:center}.panel{width:100%}}
+</style>
 </head>
 <body>
-  <div class="bg-hero" aria-hidden></div>
-  <header>
-    <h1>井字遊戲 — 智能 AI + 動畫 + 聲音</h1>
-    <div class="meta">玩家 X 對電腦 O（AI 使用 Minimax），結果會記錄於本機。</div>
-  </header>
+<div class="bg-hero" aria-hidden></div>
+<div class="container" id="app">
+  <div class="header">
+    <div>
+      <h1 class="h-title">數獨 - 進階版</h1>
+      <div class="small">自動解題、錯誤提示、計時器、高亮與題庫</div>
+    </div>
+    <div class="controls">
+      <label class="small">難度
+        <select id="difficulty"><option value="easy">初級</option><option value="medium">普通</option><option value="hard">困難</option><option value="expert">地獄</option></select>
+      </label>
+      <button class="btn" id="newBtn">新題</button>
+      <button class="btn" id="solveBtn">Solve</button>
+      <button class="btn" id="themeBtn">深色</button>
+    </div>
+  </div>
 
-  <main>
-    <section class="game-wrap fade-in">
-      <div id="board" aria-label="井字棋棋盤"></div>
-      <div style="display:flex;justify-content:center;margin-top:12px;gap:8px">
-        <button class="btn primary" id="restart">重新開始</button>
-        <button class="btn ghost" id="undo">悔棋</button>
+  <div class="grid-wrap">
+    <div class="sudoku-card">
+      <div id="board" role="grid"></div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="btn" id="checkBtn">檢查錯誤</button>
+        <button class="btn" id="hintBtn">提示 (填一格)</button>
+        <div style="margin-left:auto;display:flex;gap:8px;align-items:center"><span class="small">計時</span><strong id="timer">00:00</strong></div>
       </div>
-    </section>
+    </div>
 
-    <aside class="panel fade-in">
-      <div class="status" id="status">輪到: <strong id="turn">X</strong></div>
-
-      <div class="stats">
-        <div class="stat">玩家勝: <span id="wins">0</span></div>
-        <div class="stat">電腦勝: <span id="losses">0</span></div>
-        <div class="stat">平手: <span id="draws">0</span></div>
+    <aside class="panel">
+      <div class="stat"><div>最佳紀錄 (秒)</div><div id="bestTime">—</div></div>
+      <div class="stat"><div>完成次數</div><div id="completed">0</div></div>
+      <div class="stat"><div>錯誤次數(本局)</div><div id="errors">0</div></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary" id="resetStats">重置紀錄</button>
+        <button class="btn" id="exportBtn">匯出題庫</button>
       </div>
-
-      <div style="margin-top:10px;display:flex;gap:8px">
-        <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="soundToggle" checked> 音效</label>
-        <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="aiToggle" checked> AI 開啟</label>
-      </div>
-
-      <div style="margin-top:12px;font-size:0.92rem;color:rgba(255,255,255,0.85)">說明：點擊格子下 X；電腦會用最佳步驟回手。可使用悔棋（只限最近一步）。</div>
+      <div class="small">題庫快速選擇</div>
+      <select id="presetSelect"></select>
     </aside>
-  </main>
+  </div>
+  <footer>儲存在 localStorage。若要分享題目，請匯出。（手機支援 RWD）</footer>
+</div>
 
-  <footer>儲存在 localStorage 中 • 如需重置統計請在瀏覽器清除儲存</footer>
+<script>
+/* ------------------ Helper / Generator / Solver ------------------ */
+function cloneGrid(g){return g.map(r=>r.slice())}
+function emptyGrid(){return Array.from({length:9},()=>Array(9).fill(0))}
 
-  <script>
-    /* --- Game state --- */
-    const boardEl = document.getElementById('board');
-    const statusEl = document.getElementById('status');
-    const turnEl = document.getElementById('turn');
-    const restartBtn = document.getElementById('restart');
-    const undoBtn = document.getElementById('undo');
-    const winsEl = document.getElementById('wins');
-    const lossesEl = document.getElementById('losses');
-    const drawsEl = document.getElementById('draws');
-    const soundToggle = document.getElementById('soundToggle');
-    const aiToggle = document.getElementById('aiToggle');
+function isValid(board,row,col,num){
+  for(let i=0;i<9;i++) if(board[row][i]===num||board[i][col]===num) return false;
+  const br=Math.floor(row/3)*3, bc=Math.floor(col/3)*3;
+  for(let r=0;r<3;r++) for(let c=0;c<3;c++) if(board[br+r][bc+c]===num) return false;
+  return true;
+}
 
-    let board = Array(9).fill('');
-    let currentPlayer = 'X';
-    let gameActive = true;
-    let history = []; // for undo
-
-    /* stats */
-    const statsKey = 'ttt_stats_v1';
-    let stats = {wins:0, losses:0, draws:0};
-    try{const s = localStorage.getItem(statsKey); if(s) stats = JSON.parse(s);}catch(e){}
-    updateStatsUI();
-
-    function saveStats(){ localStorage.setItem(statsKey, JSON.stringify(stats)); updateStatsUI(); }
-    function updateStatsUI(){ winsEl.textContent = stats.wins; lossesEl.textContent = stats.losses; drawsEl.textContent = stats.draws; }
-
-    /* --- Sound (generated via WebAudio) --- */
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    function playBeep(frequency=440,duration=0.08, type='sine', gain=0.06){ if(!soundToggle.checked) return; const o = audioCtx.createOscillator(); const g = audioCtx.createGain(); o.type = type; o.frequency.value = frequency; g.gain.value = gain; o.connect(g); g.connect(audioCtx.destination); o.start(); g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration); setTimeout(()=>o.stop(), duration*1000); }
-    function playWin(){ playBeep(660,0.18,'sawtooth',0.09); setTimeout(()=>playBeep(880,0.18,'sine',0.11),160); }
-    function playPlace(){ playBeep(520,0.06,'sine',0.06); }
-    function playDraw(){ playBeep(320,0.14,'triangle',0.06); }
-
-    /* --- Render --- */
-    function render(){ boardEl.innerHTML = ''; board.forEach((v,i)=>{
-      const d = document.createElement('div'); d.className='cell'; d.dataset.i=i; d.textContent=v; d.addEventListener('click',()=>onCellClick(i)); boardEl.appendChild(d);
-    }); turnEl.textContent = currentPlayer; }
-
-    /* --- Game logic (win check) --- */
-    const winCombos = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-    function checkWinner(b=board){ for(const [a,b1,c] of winCombos){ if(b[a] && b[a]===b[b1] && b[a]===b[c]) return {winner:b[a],combo:[a,b1,c]}; } if(!b.includes('')) return {winner:'draw'}; return null; }
-
-    /* --- Minimax AI (O is AI) --- */
-    function minimax(bd, player){ const res = checkWinner(bd); if(res){ if(res.winner==='X') return {score:-10}; if(res.winner==='O') return {score:10}; if(res.winner==='draw') return {score:0}; }
-      const moves = [];
-      for(let i=0;i<9;i++){
-        if(bd[i]===''){ const move={index:i}; bd[i]=player; const result = minimax(bd, player==='O'?'X':'O'); move.score = result.score; bd[i]=''; moves.push(move); }
+function fillBoard(board){
+  for(let r=0;r<9;r++){
+    for(let c=0;c<9;c++){
+      if(board[r][c]===0){
+        const nums=[1,2,3,4,5,6,7,8,9].sort(()=>Math.random()-0.5);
+        for(const n of nums){
+          if(isValid(board,r,c,n)){
+            board[r][c]=n;
+            if(fillBoard(board)) return true;
+            board[r][c]=0;
+          }
+        }
+        return false;
       }
-      let bestMove;
-      if(player==='O'){ let bestScore=-Infinity; for(const m of moves){ if(m.score>bestScore){bestScore=m.score;bestMove=m;} } return bestMove; }
-      else { let bestScore=Infinity; for(const m of moves){ if(m.score<bestScore){bestScore=m.score;bestMove=m;} } return bestMove; }
     }
+  }
+  return true;
+}
 
-    /* --- UI helpers --- */
-    function highlightWinning(combo){ const cells = document.querySelectorAll('.cell'); combo.forEach(i=>cells[i].classList.add('win')); }
+function generateFull(){const b=emptyGrid();fillBoard(b);return b}
 
-    /* --- Actions --- */
-    function onCellClick(i){ if(!gameActive || board[i]!=='' ) return; history.push(board.slice()); board[i]=currentPlayer; animatePlace(i); playPlace(); const res = checkWinner(); if(res){ endGame(res); return; } if(aiToggle.checked){ currentPlayer='O'; render(); // AI move using minimax with small delay
-        setTimeout(()=>{ const best = minimax(board.slice(),'O'); const moveIndex = best?best.index:board.findIndex(x=>x===''); if(moveIndex>=0){ history.push(board.slice()); board[moveIndex]='O'; animatePlace(moveIndex); playPlace(); const r2 = checkWinner(); if(r2){ endGame(r2); } currentPlayer='X'; render(); } }, 220);
-      } else { currentPlayer='O'; render(); }
+function digHoles(full,difficulty){
+  const holesMap={easy:36,medium:46,hard:54,expert:60};
+  let holes=holesMap[difficulty]||46; const g=cloneGrid(full);
+  while(holes>0){const r=Math.floor(Math.random()*9), c=Math.floor(Math.random()*9); if(g[r][c]!==0){g[r][c]=0;holes--;}}
+  return g;
+}
 
-      render(); }
+// Backtracking solver (returns true and fills board)
+function solveBoard(board){
+  for(let r=0;r<9;r++){
+    for(let c=0;c<9;c++){
+      if(board[r][c]===0){
+        for(let n=1;n<=9;n++){
+          if(isValid(board,r,c,n)){
+            board[r][c]=n;
+            if(solveBoard(board)) return true;
+            board[r][c]=0;
+          }
+        }
+        return false;
+      }
+    }
+  }
+  return true;
+}
 
-    function animatePlace(i){ const cell = boardEl.querySelector(`.cell[data-i="${i}"]`); if(!cell) return; cell.animate([{transform:'scale(0.6)'},{transform:'scale(1.05)'},{transform:'scale(1)'}],{duration:260,easing:'cubic-bezier(.2,.9,.3,1)'}); }
+/* ------------------ UI & State ------------------ */
+const boardEl=document.getElementById('board');
+const difficultySel=document.getElementById('difficulty');
+const newBtn=document.getElementById('newBtn');
+const solveBtn=document.getElementById('solveBtn');
+const checkBtn=document.getElementById('checkBtn');
+const hintBtn=document.getElementById('hintBtn');
+const presetSelect=document.getElementById('presetSelect');
+const themeBtn=document.getElementById('themeBtn');
+const timerEl=document.getElementById('timer');
+const bestTimeEl=document.getElementById('bestTime');
+const completedEl=document.getElementById('completed');
+const errorsEl=document.getElementById('errors');
+const resetStatsBtn=document.getElementById('resetStats');
+const exportBtn=document.getElementById('exportBtn');
 
-    function endGame(result){ gameActive=false; if(result.winner==='draw'){ statusEl.textContent='平手！'; playDraw(); stats.draws+=1; saveStats(); } else { statusEl.textContent = result.winner+' 勝利！'; highlightWinning(result.combo); playWin(); if(result.winner==='X') stats.wins+=1; else stats.losses+=1; saveStats(); } }
+let solution=null; let puzzle=null; let startTime=null; let timerInterval=null; let currentErrors=0;
 
-    restartBtn.addEventListener('click',()=>{ restartGame(); });
-    undoBtn.addEventListener('click',()=>{ if(history.length>0 && gameActive){ board = history.pop(); currentPlayer = 'X'; render(); } });
+// stats in localStorage
+const statsKey='sudoku_stats_v1'; let stats=JSON.parse(localStorage.getItem(statsKey)||'{}');
+if(!stats.best) stats.best={easy:null,medium:null,hard:null,expert:null}; if(!stats.completed) stats.completed={easy:0,medium:0,hard:0,expert:0};
+updateStatsUI();
 
-    function restartGame(){ board = Array(9).fill(''); history=[]; currentPlayer='X'; gameActive=true; statusEl.textContent=''; // reset win highlight
-      const cells = document.querySelectorAll('.cell'); cells.forEach(c=>c.classList.remove('win')); render(); }
+function updateStatsUI(){ const d=difficultySel.value; bestTimeEl.textContent = stats.best[d]===null? '—': stats.best[d]; completedEl.textContent=stats.completed[d]||0; }
 
-    /* expose a function to reset stats if needed (console) */
-    window.resetTttStats = ()=>{ stats={wins:0,losses:0,draws:0}; saveStats(); }
+function startTimer(){ if(timerInterval) clearInterval(timerInterval); startTime=Date.now(); timerInterval=setInterval(()=>{const s=Math.floor((Date.now()-startTime)/1000); timerEl.textContent = new Date(s*1000).toISOString().substr(14,5);},300); }
+function stopTimer(){ if(timerInterval) clearInterval(timerInterval); timerInterval=null; }
 
-    /* init */
-    render();
+function saveStats(d,time){ if(stats.best[d]===null||time<stats.best[d]) stats.best[d]=time; stats.completed[d]=(stats.completed[d]||0)+1; localStorage.setItem(statsKey,JSON.stringify(stats)); updateStatsUI(); }
 
-    // Auto-play AI first move if O starts (not used) -- kept for extensibility
-  </script>
+// Build board UI
+function buildUI(){ boardEl.innerHTML=''; for(let r=0;r<9;r++){
+  for(let c=0;c<9;c++){
+    const cell=document.createElement('div'); cell.className='cell';
+    // block thicker border
+    if(c%3===0) cell.style.borderLeft='2px solid rgba(0,0,0,0.06)';
+    if(r%3===0) cell.style.borderTop='2px solid rgba(0,0,0,0.06)';
+    if(c===8) cell.style.borderRight='2px solid rgba(0,0,0,0.06)';
+    if(r===8) cell.style.borderBottom='2px solid rgba(0,0,0,0.06)';
+    const input=document.createElement('input'); input.type='text'; input.maxLength=1;
+    input.dataset.r=r; input.dataset.c=c;
+    input.addEventListener('input',onInput);
+    input.addEventListener('focus',onFocus);
+    input.addEventListener('blur',onBlur);
+    input.addEventListener('keydown',onKeyDown);
+    cell.appendChild(input); boardEl.appendChild(cell);
+  }}
+}
+
+function renderPuzzle(p){ puzzle=cloneGrid(p); // p is 2D
+  solution=cloneGrid(p); const solCopy=cloneGrid(p); solveBoard(solCopy); solution=solCopy;
+  buildUI(); currentErrors=0; errorsEl.textContent=currentErrors; // fill
+  const inputs = boardEl.querySelectorAll('input'); inputs.forEach(inp=>{
+    const r=+inp.dataset.r, c=+inp.dataset.c;
+    if(puzzle[r][c]!==0){ inp.value=puzzle[r][c]; inp.disabled=true; inp.parentElement.classList.add('fixed'); } else { inp.value=''; inp.disabled=false; inp.parentElement.classList.remove('fixed'); }
+  }); startTimer(); }
+
+function onInput(e){ const v=e.target.value.replace(/[^1-9]/g,''); e.target.value=v; if(!startTime) startTimer(); const r=+e.target.dataset.r, c=+e.target.dataset.c; if(v===''){ e.target.parentElement.classList.remove('error'); return; }
+  if(solution[r][c]!==+v){ e.target.parentElement.classList.add('error'); currentErrors++; errorsEl.textContent=currentErrors; } else { e.target.parentElement.classList.remove('error'); }
+  checkCompleted(); highlightSame(+v,r,c);
+}
+
+function onFocus(e){ const r=+e.target.dataset.r,c=+e.target.dataset.c; highlightRCB(r,c); }
+function onBlur(e){ clearHighlights(); }
+function onKeyDown(e){ if(e.key==='Backspace'||e.key==='Delete'){ e.target.value=''; e.target.parentElement.classList.remove('error'); }}
+
+function highlightRCB(r,c){ const cells = boardEl.querySelectorAll('.cell'); cells.forEach((cell,idx)=>{ const rr=Math.floor(idx/9), cc=idx%9; cell.classList.remove('highlight'); if(rr===r||cc===c|| (Math.floor(rr/3)===Math.floor(r/3) && Math.floor(cc/3)===Math.floor(c/3)) ) cell.classList.add('highlight'); }); }
+function clearHighlights(){ boardEl.querySelectorAll('.cell').forEach(c=>c.classList.remove('highlight','same')); }
+function highlightSame(val,r,c){ clearHighlights(); if(!val) return; boardEl.querySelectorAll('.cell').forEach((cell,idx)=>{ const rr=Math.floor(idx/9), cc=idx%9; const inp=cell.querySelector('input'); if(inp.value==val) cell.classList.add('same'); if(rr===r||cc===c|| (Math.floor(rr/3)===Math.floor(r/3) && Math.floor(cc/3)===Math.floor(c/3)) ) cell.classList.add('highlight'); }); }
+
+function checkCompleted(){ const inputs=boardEl.querySelectorAll('input'); let complete=true; for(const inp of inputs){ const r=+inp.dataset.r,c=+inp.dataset.c; if(inp.disabled) continue; if(!inp.value || +inp.value!==solution[r][c]){ complete=false; break; }} if(complete){ stopTimer(); const secs=Math.floor((Date.now()-startTime)/1000); const d=difficultySel.value; saveStats(d,secs); alert('恭喜完成！用時 ' + secs + ' 秒'); }}
+
+// Solve: fill board with solution
+function fillSolution(){ if(!solution) return; const inputs=boardEl.querySelectorAll('input'); inputs.forEach(inp=>{ const r=+inp.dataset.r,c=+inp.dataset.c; inp.value=solution[r][c]; inp.parentElement.classList.remove('error'); inp.disabled=true; inp.parentElement.classList.add('fixed'); }); stopTimer(); }
+
+// Hint: fill one empty correct cell
+function giveHint(){ for(let r=0;r<9;r++) for(let c=0;c<9;c++) if(boardEl.querySelector(`input[data-r="${r}"][data-c="${c}"]`).value===''){ const inp=boardEl.querySelector(`input[data-r="${r}"][data-c="${c}"]`); inp.value=solution[r][c]; inp.parentElement.classList.remove('error'); return; }}
+
+// ------------------ Preset puzzles (sample few) ------------------
+const presets=[
+  {name:'樣本-簡單',grid:[
+    [5,3,0,0,7,0,0,0,0],[6,0,0,1,9,5,0,0,0],[0,9,8,0,0,0,0,6,0],
+    [8,0,0,0,6,0,0,0,3],[4,0,0,8,0,3,0,0,1],[7,0,0,0,2,0,0,0,6],
+    [0,6,0,0,0,0,2,8,0],[0,0,0,4,1,9,0,0,5],[0,0,0,0,8,0,0,7,9]
+  ]},
+  {name:'樣本-中等',grid:[
+    [0,0,0,2,6,0,7,0,1],[6,8,0,0,7,0,0,9,0],[1,9,0,0,0,4,5,0,0],
+    [8,2,0,1,0,0,0,4,0],[0,0,4,6,0,2,9,0,0],[0,5,0,0,0,3,0,2,8],
+    [0,0,9,3,0,0,0,7,4],[0,4,0,0,5,0,0,3,6],[7,0,3,0,1,8,0,0,0]
+  ]}
+];
+
+function populatePresets(){ presets.forEach((p,i)=>{ const opt=document.createElement('option'); opt.value='p'+i; opt.textContent=p.name; presetSelect.appendChild(opt); }); }
+
+presetSelect.addEventListener('change',()=>{ const v=presetSelect.value; if(!v) return; const idx=Number(v.slice(1)); renderPuzzle(presets[idx].grid); });
+
+// ------------------ Events ------------------
+newBtn.addEventListener('click',()=>{ const full=generateFull(); const p=digHoles(full,difficultySel.value); renderPuzzle(p); updateStatsUI(); });
+solveBtn.addEventListener('click',()=>{ if(!solution) return; if(confirm('確定要自動解題嗎？')){ fillSolution(); }});
+checkBtn.addEventListener('click',()=>{ // mark wrong cells
+  const inputs=boardEl.querySelectorAll('input'); currentErrors=0; inputs.forEach(inp=>{ const r=+inp.dataset.r,c=+inp.dataset.c; if(inp.value && +inp.value!==solution[r][c]){ inp.parentElement.classList.add('error'); currentErrors++; } else inp.parentElement.classList.remove('error'); }); errorsEl.textContent=currentErrors; });
+hintBtn.addEventListener('click',()=>{ giveHint(); });
+
+// theme toggle
+themeBtn.addEventListener('click',()=>{ const root=document.documentElement; if(root.getAttribute('data-theme')==='dark'){ root.removeAttribute('data-theme'); themeBtn.textContent='深色'; } else { root.setAttribute('data-theme','dark'); themeBtn.textContent='淺色'; }});
+
+resetStatsBtn.addEventListener('click',()=>{ if(confirm('確定要清除紀錄嗎？')){ stats={best:{easy:null,medium:null,hard:null,expert:null},completed:{easy:0,medium:0,hard:0,expert:0}}; localStorage.removeItem(statsKey); updateStatsUI(); alert('已清除'); }});
+
+exportBtn.addEventListener('click',()=>{ const str=JSON.stringify({preset:presets}); const blob=new Blob([str],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='sudoku_presets.json'; a.click(); URL.revokeObjectURL(url); });
+
+// initial
+populatePresets(); // set default puzzle
+(function init(){ const full=generateFull(); const p=digHoles(full,difficultySel.value); renderPuzzle(p); })();
+
+// Save stats when window unload
+window.addEventListener('beforeunload',()=>{ localStorage.setItem(statsKey,JSON.stringify(stats)); });
+</script>
 </body>
 </html>
