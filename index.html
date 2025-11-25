@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>井字遊戲</title>
+    <title>井字遊戲升級版</title>
 
     <style>
         body {
@@ -30,21 +30,33 @@
             align-items: center;
             font-size: 36px;
             cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
         }
         .cell:hover {
             background: #e0e0e0;
+            transform: scale(1.05);
+        }
+        .win {
+            background: #ffeb3b !important;
         }
         #status {
             margin-top: 20px;
             font-size: 24px;
         }
+        #restartBtn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 18px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
 
-<h1>井字遊戲</h1>
+<h1>井字遊戲（升級版）</h1>
 <div id="board"></div>
 <div id="status"></div>
+<button id="restartBtn" onclick="restartGame()">重新開始</button>
 
 <script>
     const boardEl = document.getElementById("board");
@@ -70,8 +82,30 @@
 
         board[index] = currentPlayer;
         renderBoard();
+        const winner = checkGameResult();
+
+        if (!winner && currentPlayer === "X") {
+            currentPlayer = "O";
+            aiMove();
+        } else if (!winner) {
+            currentPlayer = currentPlayer === "X" ? "O" : "X";
+        }
+    }
+
+    function aiMove() {
+        if (!gameActive) return;
+
+        let emptyCells = board
+            .map((v, i) => (v === "" ? i : null))
+            .filter(v => v !== null);
+
+        if (emptyCells.length === 0) return;
+
+        let randomIndex = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+        board[randomIndex] = "O";
+        renderBoard();
         checkGameResult();
-        currentPlayer = currentPlayer === "X" ? "O" : "X";
+        currentPlayer = "X";
     }
 
     function checkGameResult() {
@@ -84,16 +118,34 @@
         for (let combo of wins) {
             const [a,b,c] = combo;
             if (board[a] && board[a] === board[b] && board[b] === board[c]) {
+                highlightWin(combo);
                 statusEl.innerText = `${board[a]} 勝利！`;
                 gameActive = false;
-                return;
+                return board[a];
             }
         }
 
         if (!board.includes("")) {
             statusEl.innerText = "平手！";
             gameActive = false;
+            return "draw";
         }
+        return null;
+    }
+
+    function highlightWin(combo) {
+        const cells = document.querySelectorAll('.cell');
+        combo.forEach(i => {
+            cells[i].classList.add('win');
+        });
+    }
+
+    function restartGame() {
+        board = ["", "", "", "", "", "", "", "", ""];
+        currentPlayer = "X";
+        gameActive = true;
+        statusEl.innerText = "";
+        renderBoard();
     }
 
     renderBoard();
